@@ -53,10 +53,10 @@ import { AuthService } from '../../core/services/auth.service';
 
         <!-- Right Side: Observability & Auth -->
         <div class="nav-actions">
-          <div class="observability-badge" title="pgvector and LangSmith active">
+          <a class="observability-badge" href="https://smith.langchain.com/o/d3dba61a-1595-4e51-92e3-c5017b929173/projects/p/e38d0945-f05b-4ed8-9f42-ea750315e30b" target="_blank" rel="noopener noreferrer" title="Open LangSmith Project: document-intelligence-platform">
             <span class="pulse-indicator"></span>
-            <span class="obs-text">LangSmith Tracing</span>
-          </div>
+            <span class="obs-text">LangSmith Tracing ↗</span>
+          </a>
 
           @if (authService.currentUser(); as user) {
             <div class="user-pill">

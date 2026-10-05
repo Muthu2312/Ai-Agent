@@ -101,8 +101,8 @@ import { AnalyticsService, PlatformStats } from '../../core/services/analytics.s
               </div>
             </div>
 
-            <a href="https://smith.langchain.com" target="_blank" class="btn btn-secondary btn-block">
-              Open LangSmith Dashboard ↗
+            <a [href]="stats()?.observability?.dashboard_url || 'https://smith.langchain.com/projects'" target="_blank" rel="noopener noreferrer" class="btn btn-secondary btn-block">
+              Open Project: {{ stats()?.observability?.project }} ↗
             </a>
           </div>
         </div>

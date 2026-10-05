@@ -19,15 +19,36 @@ def setup_langsmith() -> None:
         logger.info("LangSmith tracing is disabled (LANGCHAIN_API_KEY not configured in .env).")
 
 
+# Cache project URL once fetched
+_cached_project_url = None
+
+
 def get_langsmith_status() -> dict:
-    """Returns observability connectivity and config status."""
+    """Returns observability connectivity, direct project dashboard URL, and config status."""
+    global _cached_project_url
+
     is_active = (
         os.environ.get("LANGCHAIN_TRACING_V2") == "true"
         and bool(settings.LANGCHAIN_API_KEY)
     )
+
+    if not _cached_project_url and settings.LANGCHAIN_API_KEY:
+        try:
+            from langsmith import Client
+            client = Client(api_key=settings.LANGCHAIN_API_KEY)
+            if client.has_project(settings.LANGCHAIN_PROJECT):
+                p = client.read_project(project_name=settings.LANGCHAIN_PROJECT)
+                _cached_project_url = getattr(p, "url", None)
+        except Exception as e:
+            logger.debug(f"Could not fetch LangSmith project URL: {e}")
+
+    # Fallback to projects listing if specific URL not available
+    resolved_url = _cached_project_url or f"https://smith.langchain.com/projects"
+
     return {
         "tracing_enabled": is_active,
         "project": settings.LANGCHAIN_PROJECT,
         "endpoint": settings.LANGCHAIN_ENDPOINT,
         "has_api_key": bool(settings.LANGCHAIN_API_KEY),
+        "dashboard_url": resolved_url,
     }

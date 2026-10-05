@@ -19,6 +19,7 @@ export interface PlatformStats {
     project: string;
     endpoint: string;
     has_api_key: boolean;
+    dashboard_url?: string;
   };
 }
 

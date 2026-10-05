@@ -1,0 +1,80 @@
+services:
+  # ===================================================
+  # PostgreSQL with pgvector Extension
+  # ===================================================
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: doc_intelligence_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: doc_intelligence
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d doc_intelligence"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # ===================================================
+  # Optional MongoDB Service
+  # ===================================================
+  mongodb:
+    image: mongo:7.0
+    container_name: doc_intelligence_mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # ===================================================
+  # FastAPI Backend (LangGraph + PyMuPDF + Docx + OpenPyXL)
+  # ===================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: doc_intelligence_backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    environment:
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=doc_intelligence
+      - DATABASE_URL=postgresql+asyncpg://postgres:postgres@postgres:5432/doc_intelligence
+      - MONGODB_URL=mongodb://mongodb:27017
+    env_file:
+      - ./backend/.env
+    volumes:
+      - ./backend/app:/app/app
+      - backend_uploads:/app/uploads
+
+  # ===================================================
+  # Angular Frontend
+  # ===================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: doc_intelligence_frontend
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+  mongo_data:
+  backend_uploads:

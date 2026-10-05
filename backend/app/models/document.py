@@ -40,8 +40,8 @@ class DocumentChunk(Base):
     section_title = Column(String(255), nullable=True)
     metadata_json = Column(JSONB, default=dict)
     
-    # Vector embedding column using pgvector
-    embedding = Column(Vector(settings.VECTOR_DIMENSION), nullable=True)
+    # Vector embedding column using pgvector (dynamic dimension supporting 384, 768, 1536)
+    embedding = Column(Vector(), nullable=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # Relationships

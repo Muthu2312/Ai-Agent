@@ -53,10 +53,10 @@ graph TD
 | **Frontend** | [Angular](https://angular.dev/) (v21) | Standalone Components, Signals, Dark Glassmorphism, Reactive Forms, Citations Inspector |
 | **Backend** | [FastAPI](https://fastapi.tiangolo.com/) | Async 3.11+, SQLAlchemy 2.0 Async, Pydantic v2, Uvicorn |
 | **Agent Framework** | [LangGraph](https://www.langchain.com/langgraph) | Cyclic StateGraph, Supervisor Router, Specialized Worker Nodes |
-| **LLM & Embeddings**| OpenAI / Local Ollama / Free Source | GPT-4o-mini, text-embedding-3-small, Ollama fallback |
+| **LLM & Embeddings**| **Free-Source** (Groq / Ollama / FastEmbed) or OpenAI | 100% Free: Groq Llama 3.3 70B, Ollama local, FastEmbed CPU embeddings |
 | **Document Processing**| `PyMuPDF`, `python-docx`, `openpyxl` | Deep structure extraction for PDFs, DOCX, and multi-sheet Excel |
 | **Vector DB** | [PostgreSQL + pgvector](https://github.com/pgvector/pgvector) | Native high-dimensional vector index with cosine similarity (`<=>`) |
-| **Database** | PostgreSQL / MongoDB | Unified PostgreSQL for metadata & vectors, optional MongoDB connector |
+| **Database** | PostgreSQL / MongoDB | Unified PostgreSQL for metadata & vectors (optional MongoDB profile) |
 | **Observability** | [LangSmith](https://smith.langchain.com/) | Real-time token tracing, step visualization, run metadata, feedback |
 | **Authentication** | JWT + `httpOnly` Cookies | Secure cookie handling, Bearer header fallback, bcrypt password hashing |
 
@@ -88,6 +88,38 @@ Prerequisites: [Docker & Docker Compose](https://docs.docker.com/compose/)
    - **Frontend Application**: `http://localhost:4200`
    - **Backend API & Swagger Docs**: `http://localhost:8000/api/v1/docs`
    - **PostgreSQL + pgvector**: `localhost:5432`
+
+---
+
+## 🆓 Free-Source (Zero Cost) Options
+
+You **do not** need a paid OpenAI API key to run this platform. The platform is pre-configured with free-source alternatives:
+
+### 1. Free Embeddings: `FastEmbed` (Default)
+- **100% Free & Runs Locally on CPU**: Uses ONNX runtime with `BAAI/bge-small-en-v1.5` (384 dimensions).
+- Zero external API calls, zero cost, completely private.
+
+### 2. Free LLM Option A: Groq Cloud (Recommended for Speed)
+- Provides **ultra-fast LLaMA 3.3 70B & LLaMA 3.1 8B** at 500+ tokens/second.
+- **100% Free Tier** with no credit card required.
+- Get a free key at [console.groq.com](https://console.groq.com) and add it to `backend/.env`:
+  ```env
+  LLM_PROVIDER=groq
+  GROQ_API_KEY=gsk_your_free_groq_key
+  GROQ_MODEL=llama-3.3-70b-versatile
+  ```
+
+### 3. Free LLM Option B: Local Ollama (100% Offline)
+- Run entirely offline on your computer using [Ollama](https://ollama.com/):
+  ```bash
+  ollama run llama3.2
+  ```
+- In `backend/.env`:
+  ```env
+  LLM_PROVIDER=ollama
+  OLLAMA_MODEL=llama3.2
+  OLLAMA_BASE_URL=http://localhost:11434
+  ```
 
 ---
 

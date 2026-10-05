@@ -17,7 +17,29 @@ class VectorService:
         self._ollama_client = None
 
     def _get_embedding_client(self):
-        if settings.OPENAI_API_KEY:
+        # 1. FastEmbed (Free, CPU-based local embeddings, 0 cost)
+        if settings.EMBEDDING_PROVIDER == "fastembed":
+            try:
+                from fastembed import TextEmbedding
+                if not hasattr(self, "_fastembed_model") or self._fastembed_model is None:
+                    self._fastembed_model = TextEmbedding(model_name=settings.FASTEMBED_MODEL)
+                return self._fastembed_model
+            except Exception as e:
+                logger.warning(f"FastEmbed init failed: {e}. Falling back.")
+
+        # 2. Local Ollama Embeddings
+        if settings.EMBEDDING_PROVIDER == "ollama":
+            try:
+                from langchain_ollama import OllamaEmbeddings
+                return OllamaEmbeddings(
+                    base_url=settings.OLLAMA_BASE_URL,
+                    model=settings.OLLAMA_EMBED_MODEL,
+                )
+            except Exception as e:
+                logger.warning(f"Ollama Embeddings init failed: {e}")
+
+        # 3. OpenAI Embeddings
+        if settings.EMBEDDING_PROVIDER == "openai" and settings.OPENAI_API_KEY:
             try:
                 from langchain_openai import OpenAIEmbeddings
                 return OpenAIEmbeddings(
@@ -27,7 +49,6 @@ class VectorService:
             except Exception as e:
                 logger.warning(f"Failed to initialize OpenAI Embeddings: {e}")
 
-        # Fallback to local or mock
         return None
 
     def _generate_fallback_dense_vector(self, text_input: str, dimension: int = 1536) -> List[float]:
@@ -50,11 +71,17 @@ class VectorService:
         return vector
 
     async def generate_embeddings(self, texts: List[str]) -> List[List[float]]:
-        """Generates embeddings using configured provider (OpenAI, Ollama, or deterministic fallback)."""
+        """Generates embeddings using FastEmbed, Ollama, OpenAI, or fallback."""
         client = self._get_embedding_client()
         if client:
             try:
-                return await client.aembed_documents(texts)
+                # FastEmbed returns a generator of numpy arrays
+                if hasattr(client, "embed"):
+                    embeddings_gen = client.embed(texts)
+                    return [emb.tolist() for emb in embeddings_gen]
+                # LangChain embedding interface
+                if hasattr(client, "aembed_documents"):
+                    return await client.aembed_documents(texts)
             except Exception as e:
                 logger.error(f"Error calling embedding provider: {e}. Falling back to internal dense vectors.")
 
@@ -66,7 +93,12 @@ class VectorService:
         client = self._get_embedding_client()
         if client:
             try:
-                return await client.aembed_query(query)
+                if hasattr(client, "embed"):
+                    embeddings_gen = client.embed([query])
+                    for emb in embeddings_gen:
+                        return emb.tolist()
+                if hasattr(client, "aembed_query"):
+                    return await client.aembed_query(query)
             except Exception as e:
                 logger.error(f"Error querying embedding provider: {e}. Falling back.")
 

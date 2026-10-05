@@ -41,19 +41,29 @@ class Settings(BaseSettings):
     MONGODB_DB: str = "doc_intelligence"
     PRIMARY_DB_TYPE: str = "postgresql"  # "postgresql" or "mongodb"
 
-    # Vector Storage
-    VECTOR_DIMENSION: int = 1536  # Default for OpenAI text-embedding-3-small, configurable to 384 or 768
+    # Vector Storage & Embeddings
+    # Options: "fastembed" (100% Free, runs on CPU locally) | "ollama" (local) | "openai"
+    EMBEDDING_PROVIDER: str = "fastembed"
+    VECTOR_DIMENSION: int = 384  # 384 for fastembed (bge-small-en-v1.5), 1536 for OpenAI
+    FASTEMBED_MODEL: str = "BAAI/bge-small-en-v1.5"
 
     # LLM Settings
-    LLM_PROVIDER: str = "openai"  # "openai" or "ollama" or "free_source"
+    # Options: "groq" (100% Free Cloud Tier, ultra fast) | "ollama" (100% Free Local) | "openai"
+    LLM_PROVIDER: str = "groq"
+    
+    # 1. Groq (Free Cloud Tier: Llama 3.3 70B, Llama 3.1 8B - free api key at console.groq.com)
+    GROQ_API_KEY: Optional[str] = None
+    GROQ_MODEL: str = "llama-3.3-70b-versatile"
+
+    # 2. Local Ollama (100% Free, runs offline on your machine)
+    OLLAMA_BASE_URL: str = "http://localhost:11434"
+    OLLAMA_MODEL: str = "llama3.2"
+    OLLAMA_EMBED_MODEL: str = "nomic-embed-text"
+
+    # 3. OpenAI (Optional paid API)
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_MODEL: str = "gpt-4o-mini"
     OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
-
-    # Ollama / Free Source Fallback
-    OLLAMA_BASE_URL: str = "http://localhost:11434"
-    OLLAMA_MODEL: str = "llama3"
-    OLLAMA_EMBED_MODEL: str = "nomic-embed-text"
 
     # LangSmith Observability
     LANGCHAIN_TRACING_V2: bool = True

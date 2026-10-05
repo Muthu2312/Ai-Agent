@@ -36,6 +36,10 @@ async def init_db() -> None:
             await conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
             # Create all registered tables
             await conn.run_sync(Base.metadata.create_all)
+            try:
+                await conn.execute(text("ALTER TABLE document_chunks ALTER COLUMN embedding TYPE vector;"))
+            except Exception:
+                pass
             logger.info("Database tables & pgvector extension initialized successfully.")
     except Exception as e:
         logger.warning(f"Could not connect to PostgreSQL on startup ({e}). If using local mock/SQLite/Docker, ensure DB is running.")

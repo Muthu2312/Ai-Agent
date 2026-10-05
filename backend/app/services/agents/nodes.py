@@ -10,8 +10,33 @@ logger = logging.getLogger(__name__)
 
 
 def _get_llm():
-    """Initializes LLM based on configuration (OpenAI, Ollama, or None for heuristic)."""
-    if settings.OPENAI_API_KEY:
+    """Initializes LLM based on configuration (Groq free tier, Ollama local, or OpenAI)."""
+    # 1. Groq (Free Cloud Tier: Llama 3.3 70B, Llama 3.1 8B)
+    if (settings.LLM_PROVIDER == "groq" or settings.GROQ_API_KEY) and settings.GROQ_API_KEY:
+        try:
+            from langchain_groq import ChatGroq
+            return ChatGroq(
+                model=settings.GROQ_MODEL,
+                temperature=0.1,
+                groq_api_key=settings.GROQ_API_KEY,
+            )
+        except Exception as e:
+            logger.warning(f"Could not load Groq Chat model: {e}")
+
+    # 2. Local Ollama (100% Free offline)
+    if settings.LLM_PROVIDER == "ollama":
+        try:
+            from langchain_ollama import ChatOllama
+            return ChatOllama(
+                base_url=settings.OLLAMA_BASE_URL,
+                model=settings.OLLAMA_MODEL,
+                temperature=0.1,
+            )
+        except Exception as e:
+            logger.warning(f"Could not load Ollama Chat model: {e}")
+
+    # 3. OpenAI API
+    if (settings.LLM_PROVIDER == "openai" or settings.OPENAI_API_KEY) and settings.OPENAI_API_KEY:
         try:
             from langchain_openai import ChatOpenAI
             return ChatOpenAI(
@@ -21,6 +46,7 @@ def _get_llm():
             )
         except Exception as e:
             logger.warning(f"Could not load OpenAI Chat model: {e}")
+
     return None
 
 
